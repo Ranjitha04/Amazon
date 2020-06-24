@@ -9,6 +9,8 @@ import java.util.Map;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -56,15 +58,16 @@ public class UserController {
 	}
 	
 	@PostMapping("/users/login")
-	public String login(@Valid @RequestBody Credentials credentials) {
-		/*
-		 * boolean isExists = userService.authenticate(credentials.getUsername(),
-		 * credentials.getPassword());
-		 * 
-		 * if(isExists) return "login success";
-		 */
-		 return "invalid credentials";
-		 
+	public ResponseEntity<String> login(@Valid @RequestBody Credentials credentials) {
+		
+		HttpEntity<Credentials> entity = new HttpEntity<>(credentials);
+		 try {
+			return restTemplate.exchange(new URI("http://localhost:8080/users/login"), HttpMethod.POST, entity, String.class);
+		} catch (RestClientException | URISyntaxException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		 return new ResponseEntity<String>("login failed", HttpStatus.OK);
 	}
 	
 	
@@ -77,7 +80,7 @@ public class UserController {
 	public ResponseEntity<Map<String, String>> handleException(MethodArgumentNotValidException ex) {
 		Map<String,String> errorMessage = new HashMap<String,String>();
 				ex.getBindingResult().getFieldErrors().forEach(error -> errorMessage.put("message",error.getDefaultMessage()));
-	   return new ResponseEntity(errorMessage, HttpStatus.BAD_REQUEST);
+	   return new ResponseEntity<>(errorMessage, HttpStatus.BAD_REQUEST);
 	
 	}
 }
